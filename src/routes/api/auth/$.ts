@@ -1,4 +1,15 @@
-import { toNextJsHandler } from "better-auth/next-js";
-import { auth } from "@/lib/auth"; // path to your auth file
+import { createFileRoute } from "@tanstack/react-router";
+import { auth } from "@/lib/auth";
 
-export const { POST, GET } = toNextJsHandler(auth);
+export const Route = createFileRoute("/api/auth/$")({
+	server: {
+		handlers: {
+			GET: async ({ request }: { request: Request }) => {
+				return await auth.handler(request);
+			},
+			POST: async ({ request }: { request: Request }) => {
+				return await auth.handler(request);
+			},
+		},
+	},
+});

@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { authClient } from "#/lib/auth-client";
+import { DOMAIN_UNIVERSITY_MAP } from "#/lib/universities";
 import { Button } from "@/components/ui/button";
+
 import {
 	Card,
 	CardContent,
@@ -16,14 +19,55 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupPage() {
-	const [fullName, setFullName] = useState("");
+	const navigate = useNavigate();
+
+	const [name, setName] = useState("");
 	const [studentId, setStudentId] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
 
-	function handleSubmit(e: any) {
+	const domain = email.split("@")[1] ?? "";
+	const detectedUniversity = DOMAIN_UNIVERSITY_MAP[domain] ?? null;
+
+	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		// TODO: wire up Better Auth signup call here
+		setError("");
+
+		// ── Client-side guards ──
+		if (!detectedUniversity) {
+			setError("Please use your official university email address.");
+			return;
+		}
+
+		if (password !== confirmPassword) {
+			setError("Passwords do not match.");
+			return;
+		}
+
+		if (password.length < 8) {
+			setError("Password must be at least 8 characters.");
+			return;
+		}
+
+		setLoading(true);
+
+		const { error: authError } = await authClient.signUp.email({
+			name,
+			email,
+			password,
+			studentId,
+		});
+
+		setLoading(false);
+
+		if (authError) {
+			setError(authError.message ?? "Something went wrong. Please try again.");
+			return;
+		}
+		navigate({ to: "/" });
 	}
 
 	return (
@@ -39,13 +83,13 @@ function SignupPage() {
 				<CardContent>
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="fullName">Full name</Label>
+							<Label htmlFor="name">Full name</Label>
 							<Input
-								id="fullName"
+								id="name"
 								type="text"
 								placeholder="as on your student ID"
-								value={fullName}
-								onChange={(e: any) => setFullName(e.target.value)}
+								value={name}
+								onChange={(e) => setName(e.target.value)}
 								required
 							/>
 						</div>
@@ -57,7 +101,7 @@ function SignupPage() {
 								type="text"
 								placeholder="e.g. 22101234"
 								value={studentId}
-								onChange={(e: any) => setStudentId(e.target.value)}
+								onChange={(e) => setStudentId(e.target.value)}
 								required
 							/>
 						</div>
@@ -69,9 +113,23 @@ function SignupPage() {
 								type="email"
 								placeholder="abc@g.bracu.ac.bd"
 								value={email}
-								onChange={(e: any) => setEmail(e.target.value)}
+								onChange={(e) => setEmail(e.target.value)}
 								required
 							/>
+							{/* Live university detection banner */}
+							{detectedUniversity && (
+								<div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+									<span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+									detected: {detectedUniversity}
+								</div>
+							)}
+							{/* Warn if they've typed past the @ with no valid domain */}
+							{!detectedUniversity && domain && (
+								<div className="flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-700">
+									<span className="h-2 w-2 rounded-full bg-yellow-400 shrink-0" />
+									not a recognised university domain
+								</div>
+							)}
 						</div>
 
 						<div className="space-y-2">
@@ -80,14 +138,35 @@ function SignupPage() {
 								id="password"
 								type="password"
 								value={password}
-								onChange={(e: any) => setPassword(e.target.value)}
+								onChange={(e) => setPassword(e.target.value)}
 								required
 							/>
 						</div>
 
-						<Button type="submit" className="w-full">
-							Create account
+						<div className="space-y-2">
+							<Label htmlFor="confirmPassword">Confirm password</Label>
+							<Input
+								id="confirmPassword"
+								type="password"
+								value={confirmPassword}
+								onChange={(e) => setConfirmPassword(e.target.value)}
+								required
+							/>
+						</div>
+
+						{/* Server or validation error */}
+						{error && <p className="text-sm text-red-600">{error}</p>}
+
+						<Button type="submit" className="w-full" disabled={loading}>
+							{loading ? "Creating account..." : "Create account"}
 						</Button>
+
+						<p className="text-center text-sm text-muted-foreground">
+							Already have an account?{" "}
+							<a href="/login" className="text-red-600 hover:underline">
+								Log in
+							</a>
+						</p>
 					</form>
 				</CardContent>
 			</Card>
