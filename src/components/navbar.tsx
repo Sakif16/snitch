@@ -9,7 +9,7 @@ export function Navbar() {
 			<div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
 				{/* Logo */}
 				<Link to="/" className="font-mono text-lg font-medium tracking-tight">
-					snitch<span className="text-red-600">.</span>
+					snitch<span className="text-red-800">.</span>
 				</Link>
 
 				{/* Right side */}
