@@ -39,8 +39,7 @@ export const user = pgTable("user", {
 		.$onUpdate(() => /* @__PURE__ */ new Date())
 		.notNull(),
 
-	// ── app-specific fields, populated by the "before user creation" hook ──
-	studentId: text("student_id"),
+	// ── app-specific field, populated by the "before user creation" hook ──
 	university: universityEnum("university"),
 });
 
