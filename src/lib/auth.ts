@@ -15,11 +15,6 @@ export const auth = betterAuth({
 
 	user: {
 		additionalFields: {
-			studentId: {
-				type: "string",
-				required: true,
-				input: true,
-			},
 			university: {
 				type: "string",
 				required: false,

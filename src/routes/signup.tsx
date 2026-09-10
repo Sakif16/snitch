@@ -22,7 +22,6 @@ function SignupPage() {
 	const navigate = useNavigate();
 
 	const [name, setName] = useState("");
-	const [studentId, setStudentId] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -58,7 +57,6 @@ function SignupPage() {
 			name,
 			email,
 			password,
-			studentId,
 		});
 
 		setLoading(false);
@@ -87,21 +85,9 @@ function SignupPage() {
 							<Input
 								id="name"
 								type="text"
-								placeholder="as on your student ID"
+								placeholder="your full name"
 								value={name}
 								onChange={(e) => setName(e.target.value)}
-								required
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label htmlFor="studentId">Student ID</Label>
-							<Input
-								id="studentId"
-								type="text"
-								placeholder="e.g. 22101234"
-								value={studentId}
-								onChange={(e) => setStudentId(e.target.value)}
 								required
 							/>
 						</div>
