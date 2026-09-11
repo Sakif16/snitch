@@ -224,6 +224,35 @@ export const getSnitchDetail = createServerFn({ method: "GET" })
 	});
 
 // ─────────────────────────────────────────────
+// getUniversityCounts
+// Public read — total snitch count per university, for the homepage
+// cards. Universities with zero snitches still appear, with count 0.
+// ─────────────────────────────────────────────
+
+const ALL_UNIVERSITIES = ["BRACU", "NSU", "UIU", "AUST", "EWU", "DIU"] as const;
+
+export const getUniversityCounts = createServerFn({ method: "GET" }).handler(
+	async () => {
+		const rows = await db
+			.select({
+				university: snitch.university,
+				count: sql<number>`count(*)`.mapWith(Number),
+			})
+			.from(snitch)
+			.groupBy(snitch.university);
+
+		const countsByUniversity = Object.fromEntries(
+			rows.map((r) => [r.university, r.count]),
+		);
+
+		return ALL_UNIVERSITIES.map((tag) => ({
+			tag,
+			count: countsByUniversity[tag] ?? 0,
+		}));
+	},
+);
+
+// ─────────────────────────────────────────────
 // addReview
 // A snitch already exists — this adds one more experience to it.
 // Enforced: verified email, same university as the snitch, one
