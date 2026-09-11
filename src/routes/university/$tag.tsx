@@ -8,6 +8,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "#/components/ui/card";
+import { authClient } from "#/lib/auth-client";
 import { searchSnitches } from "#/lib/snitch";
 import { Input } from "@/components/ui/input";
 
@@ -17,6 +18,16 @@ export const Route = createFileRoute("/university/$tag")({
 
 function RouteComponent() {
 	const { tag } = Route.useParams();
+	const { data: session, isPending: sessionPending } = authClient.useSession();
+
+	const ownUniversity = session?.user.university ?? null;
+	const isOwnUniversity = ownUniversity === tag.toUpperCase();
+
+	const disabledReason = !session
+		? "Log in with your university email to post here."
+		: !isOwnUniversity
+			? `You can only post in ${ownUniversity}.`
+			: undefined;
 
 	const [query, setQuery] = useState("");
 	const [results, setResults] = useState<
@@ -67,7 +78,10 @@ function RouteComponent() {
 			</div>
 
 			<div className="flex items-center justify-center">
-				<CreateSnitchModal />
+				<CreateSnitchModal
+					enabled={!sessionPending && !!session && isOwnUniversity}
+					disabledReason={disabledReason}
+				/>
 			</div>
 
 			<div className="flex flex-col items-center justify-center gap-3 py-10">
