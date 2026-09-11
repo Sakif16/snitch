@@ -1,15 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "#/components/ui/card"
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "#/components/ui/card";
+import { searchSnitches } from "#/lib/snitch";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/university/$tag")({
 	component: RouteComponent,
@@ -17,6 +17,37 @@ export const Route = createFileRoute("/university/$tag")({
 
 function RouteComponent() {
 	const { tag } = Route.useParams();
+
+	const [query, setQuery] = useState("");
+	const [results, setResults] = useState<
+		Awaited<ReturnType<typeof searchSnitches>>
+	>([]);
+	const [loading, setLoading] = useState(false);
+
+	// Re-run the search whenever the query changes.
+	// No debounce yet — fine for now, worth adding later if it feels laggy.
+	useEffect(() => {
+		const trimmed = query.trim();
+		if (!trimmed) {
+			setResults([]);
+			return;
+		}
+
+		let cancelled = false;
+		setLoading(true);
+
+		searchSnitches({ data: { university: tag.toUpperCase(), query: trimmed } })
+			.then((rows) => {
+				if (!cancelled) setResults(rows);
+			})
+			.finally(() => {
+				if (!cancelled) setLoading(false);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [query, tag]);
 
 	return (
 		<>
@@ -30,23 +61,53 @@ function RouteComponent() {
 				<Input
 					placeholder="Search by student ID or name..."
 					className="w-full max-w-sm"
+					value={query}
+					onChange={(e) => setQuery(e.target.value)}
 				/>
 			</div>
+
 			<div className="flex items-center justify-center">
-				<Button variant="custom">
-					Add Snitch
-				</Button>
+				<Button variant="custom">Add Snitch</Button>
 			</div>
-			<div className="flex flex-col items-center justify-center py-10">
-				Snitches
-				<Card className="w-full max-w-sm">
-					<CardHeader>
-						Name
-						<CardDescription>
-							Issues
-						</CardDescription>
-					</CardHeader>	
-				</Card>
+
+			<div className="flex flex-col items-center justify-center gap-3 py-10">
+				<p className="text-sm text-muted-foreground">
+					{loading
+						? "Searching..."
+						: query.trim()
+							? `${results.length} result${results.length === 1 ? "" : "s"}`
+							: "Type a name or student ID to search"}
+				</p>
+
+				{results.map((s) => (
+					<Link
+						key={s.id}
+						to="/snitch/$id"
+						params={{ id: s.id }}
+						className="w-full max-w-sm"
+					>
+						<Card className="w-full transition-colors hover:border-red-500">
+							<CardHeader>
+								<CardTitle>{s.studentName}</CardTitle>
+								<CardDescription>
+									ID: {s.studentId} · {s.reviewCount} review
+									{s.reviewCount === 1 ? "" : "s"}
+								</CardDescription>
+							</CardHeader>
+						</Card>
+					</Link>
+				))}
+
+				{!loading && query.trim() && results.length === 0 && (
+					<Card className="w-full max-w-sm">
+						<CardHeader>
+							<CardTitle>No snitch found</CardTitle>
+							<CardDescription>
+								Nothing matches "{query.trim()}" yet. Be the first to post.
+							</CardDescription>
+						</CardHeader>
+					</Card>
+				)}
 			</div>
 		</>
 	);
