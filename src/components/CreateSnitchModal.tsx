@@ -53,7 +53,13 @@ function StarPicker({
 	);
 }
 
-export function CreateSnitchModal() {
+export function CreateSnitchModal({
+	enabled,
+	disabledReason,
+}: {
+	enabled: boolean;
+	disabledReason?: string;
+}) {
 	const navigate = useNavigate();
 
 	const [open, setOpen] = useState(false);
@@ -133,6 +139,19 @@ export function CreateSnitchModal() {
 		setOpen(false);
 		resetForm();
 		navigate({ to: "/snitch/$id", params: { id: result.snitchId } });
+	}
+
+	if (!enabled) {
+		return (
+			<div className="flex flex-col items-center gap-1">
+				<Button variant="custom" disabled>
+					Add Snitch
+				</Button>
+				{disabledReason && (
+					<p className="text-xs text-muted-foreground">{disabledReason}</p>
+				)}
+			</div>
+		);
 	}
 
 	return (
