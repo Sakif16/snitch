@@ -9,16 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SigninRouteImport } from './routes/signin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UniversityTagRouteImport } from './routes/university/$tag'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SnitchIdRouteImport } from './routes/snitch/$id'
+import { Route as UniversityTagRouteImport } from './routes/university/$tag'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SigninRoute = SigninRouteImport.update({
@@ -26,19 +26,19 @@ const SigninRoute = SigninRouteImport.update({
   path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UniversityTagRoute = UniversityTagRouteImport.update({
-  id: '/university/$tag',
-  path: '/university/$tag',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SnitchIdRoute = SnitchIdRouteImport.update({
   id: '/snitch/$id',
   path: '/snitch/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UniversityTagRoute = UniversityTagRouteImport.update({
+  id: '/university/$tag',
+  path: '/university/$tag',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -110,11 +110,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signin': {
@@ -124,18 +124,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/university/$tag': {
-      id: '/university/$tag'
-      path: '/university/$tag'
-      fullPath: '/university/$tag'
-      preLoaderRoute: typeof UniversityTagRouteImport
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/snitch/$id': {
@@ -143,6 +136,13 @@ declare module '@tanstack/react-router' {
       path: '/snitch/$id'
       fullPath: '/snitch/$id'
       preLoaderRoute: typeof SnitchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/university/$tag': {
+      id: '/university/$tag'
+      path: '/university/$tag'
+      fullPath: '/university/$tag'
+      preLoaderRoute: typeof UniversityTagRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {

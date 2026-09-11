@@ -31,9 +31,12 @@ function isUniqueViolation(err: unknown): boolean {
 	return code === "23505";
 }
 
-
+// ─────────────────────────────────────────────
 // createSnitch
-
+// First post for a student — creates the snitch AND the first review
+// in one call. If (studentId, university) already exists, returns the
+// existing snitch id instead of creating a duplicate.
+// ─────────────────────────────────────────────
 
 type CreateSnitchInput = Ratings & {
 	studentName: string;
@@ -123,8 +126,11 @@ export const createSnitch = createServerFn({ method: "POST" })
 		return { ok: true as const, snitchId };
 	});
 
+// ─────────────────────────────────────────────
 // searchSnitches
-
+// Public read — no auth required. Matches on name or student ID,
+// scoped to one university.
+// ─────────────────────────────────────────────
 
 type SearchSnitchesInput = {
 	university: string;
@@ -166,8 +172,11 @@ export const searchSnitches = createServerFn({ method: "GET" })
 		return rows;
 	});
 
+// ─────────────────────────────────────────────
 // getSnitchDetail
-
+// Public read — full profile with averaged ratings and all reviews.
+// Reviewer identity shows name only (no student ID on user anymore).
+// ─────────────────────────────────────────────
 
 export const getSnitchDetail = createServerFn({ method: "GET" })
 	.inputValidator((data: { snitchId: string }) => data)
@@ -214,8 +223,12 @@ export const getSnitchDetail = createServerFn({ method: "GET" })
 		};
 	});
 
+// ─────────────────────────────────────────────
 // addReview
-
+// A snitch already exists — this adds one more experience to it.
+// Enforced: verified email, same university as the snitch, one
+// review per user per snitch (DB unique constraint catches this).
+// ─────────────────────────────────────────────
 
 type AddReviewInput = Ratings & {
 	snitchId: string;
