@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Button } from "#/components/ui/button";
+import { CreateSnitchModal } from "#/components/CreateSnitchModal";
 import {
 	Card,
 	CardContent,
@@ -67,7 +67,7 @@ function RouteComponent() {
 			</div>
 
 			<div className="flex items-center justify-center">
-				<Button variant="custom">Add Snitch</Button>
+				<CreateSnitchModal />
 			</div>
 
 			<div className="flex flex-col items-center justify-center gap-3 py-10">
