@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Button } from "#/components/ui/button";
+import { AddReviewModal } from "#/components/AddReviewModal";
 import {
 	Card,
 	CardContent,
@@ -54,7 +54,7 @@ function SnitchDetailPage() {
 							ID: {snitch.studentId} · {snitch.university}
 						</CardDescription>
 					</div>
-					<Button variant="custom">+ add experience</Button>
+					<AddReviewModal snitchId={snitch.id} />
 				</CardHeader>
 
 				<CardContent>
