@@ -45,7 +45,7 @@ type CreateSnitchInput = Ratings & {
 };
 
 export const createSnitch = createServerFn({ method: "POST" })
-	.inputValidator((data: CreateSnitchInput) => data)
+	.validator((data: CreateSnitchInput) => data)
 	.handler(async ({ data }) => {
 		const headers = getRequestHeaders();
 		const session = await auth.api.getSession({ headers });
@@ -138,7 +138,7 @@ type SearchSnitchesInput = {
 };
 
 export const searchSnitches = createServerFn({ method: "GET" })
-	.inputValidator((data: SearchSnitchesInput) => data)
+	.validator((data: SearchSnitchesInput) => data)
 	.handler(async ({ data }) => {
 		const q = data.query.trim();
 		if (!q) return [];
@@ -179,7 +179,7 @@ export const searchSnitches = createServerFn({ method: "GET" })
 // ─────────────────────────────────────────────
 
 export const getSnitchDetail = createServerFn({ method: "GET" })
-	.inputValidator((data: { snitchId: string }) => data)
+	.validator((data: { snitchId: string }) => data)
 	.handler(async ({ data }) => {
 		const [snitchRow] = await db
 			.select()
@@ -236,7 +236,7 @@ type AddReviewInput = Ratings & {
 };
 
 export const addReview = createServerFn({ method: "POST" })
-	.inputValidator((data: AddReviewInput) => data)
+	.validator((data: AddReviewInput) => data)
 	.handler(async ({ data }) => {
 		const headers = getRequestHeaders();
 		const session = await auth.api.getSession({ headers });
