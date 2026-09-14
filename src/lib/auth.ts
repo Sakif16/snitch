@@ -9,6 +9,16 @@ export const auth = betterAuth({
 		provider: "pg",
 	}),
 
+	emailVerification: {
+    sendVerificationEmail: async ( { user, url, token }, request) => {
+      void sendEmail({
+        to: user.email,
+        subject: "Verify your email address",
+        text: `Click the link to verify your email: ${url}`,
+      });
+    },
+  },
+
 	emailAndPassword: {
 		enabled: true,
 	},
