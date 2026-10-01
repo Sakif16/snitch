@@ -127,7 +127,7 @@ export function AddReviewModal({ snitchId }: { snitchId: string }) {
 				<DialogHeader>
 					<DialogTitle>Add your experience</DialogTitle>
 					<DialogDescription>
-						Rate this groupmate honestly. Your name will be visible on this
+						Rate this groupmate honestly. Your name and email will be visible on this
 						review.
 					</DialogDescription>
 				</DialogHeader>
