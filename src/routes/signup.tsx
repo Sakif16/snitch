@@ -35,7 +35,6 @@ function SignupPage() {
 		e.preventDefault();
 		setError("");
 
-		// ── Client-side guards ──
 		if (!detectedUniversity) {
 			setError("Please use your official university email address.");
 			return;
@@ -90,6 +89,10 @@ function SignupPage() {
 								onChange={(e) => setName(e.target.value)}
 								required
 							/>
+							<p className="text-xs text-muted-foreground">
+								This name will be shown publicly alongside your email on
+								every snitch and review you post. So don't play smart.
+							</p>
 						</div>
 
 						<div className="space-y-2">
@@ -102,14 +105,12 @@ function SignupPage() {
 								onChange={(e) => setEmail(e.target.value)}
 								required
 							/>
-							{/* Live university detection banner */}
 							{detectedUniversity && (
 								<div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
 									<span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
 									detected: {detectedUniversity}
 								</div>
 							)}
-							{/* Warn if they've typed past the @ with no valid domain */}
 							{!detectedUniversity && domain && (
 								<div className="flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-700">
 									<span className="h-2 w-2 rounded-full bg-yellow-400 shrink-0" />
@@ -140,7 +141,6 @@ function SignupPage() {
 							/>
 						</div>
 
-						{/* Server or validation error */}
 						{error && <p className="text-sm text-red-600">{error}</p>}
 
 						<Button type="submit" className="w-full" disabled={loading}>
@@ -149,7 +149,7 @@ function SignupPage() {
 
 						<p className="text-center text-sm text-muted-foreground">
 							Already have an account?{" "}
-							<a href="/login" className="text-red-600 hover:underline">
+							<a href="/signin" className="text-red-600 hover:underline">
 								Log in
 							</a>
 						</p>
