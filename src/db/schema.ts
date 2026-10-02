@@ -149,6 +149,12 @@ export const review = pgTable(
 		description: text("description").notNull(),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
+		// Updates automatically whenever a review row is edited.
+		// Lets us show "(edited)" and the exact edit time if we want to later.
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
 	},
 	(table) => [
 		// one review per user per snitch

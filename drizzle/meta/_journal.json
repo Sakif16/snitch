@@ -8,6 +8,13 @@
       "when": 1789039143327,
       "tag": "0000_puzzling_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790966442793,
+      "tag": "0001_amusing_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

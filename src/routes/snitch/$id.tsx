@@ -1,5 +1,4 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { AddReviewModal } from "#/components/AddReviewModal";
 import {
 	Card,
 	CardContent,
@@ -7,6 +6,9 @@ import {
 	CardHeader,
 	CardTitle,
 } from "#/components/ui/card";
+import { authClient } from "#/lib/auth-client";
+import { AddReviewModal } from "#/components/AddReviewModal";
+import { EditReviewModal } from "#/components/EditReviewModal";
 import { getSnitchDetail } from "#/lib/snitch";
 
 export const Route = createFileRoute("/snitch/$id")({
@@ -31,8 +33,22 @@ function RatingCell({ label, value }: { label: string; value: number }) {
 	);
 }
 
+// Shows "Sep 30, 2026, 2:14 PM" — date and exact local time together,
+// using the viewer's own browser locale and timezone automatically.
+function formatDateTime(value: string | Date) {
+	return new Date(value).toLocaleString(undefined, {
+		dateStyle: "medium",
+		timeStyle: "short",
+	});
+}
+
 function SnitchDetailPage() {
 	const { snitch, reviews, averages } = Route.useLoaderData();
+	const { data: session } = authClient.useSession();
+
+	const myReview = session
+		? reviews.find((r) => r.authorId === session.user.id)
+		: undefined;
 
 	return (
 		<div className="mx-auto max-w-2xl px-5 py-10">
@@ -54,13 +70,15 @@ function SnitchDetailPage() {
 							ID: {snitch.studentId} · {snitch.university}
 						</CardDescription>
 					</div>
-					<AddReviewModal snitchId={snitch.id} />
+					{/* If the user already has a review here, don't offer to add a
+					    second one — they edit their existing one instead (below). */}
+					{!myReview && <AddReviewModal snitchId={snitch.id} />}
 				</CardHeader>
 
 				<CardContent>
 					<div className="grid grid-cols-4 divide-x divide-border rounded-md border border-border">
 						<RatingCell label="Teamwork" value={averages.teamwork} />
-						<RatingCell label="Communication" value={averages.communication} />
+						<RatingCell label="Comms" value={averages.communication} />
 						<RatingCell label="Reliability" value={averages.reliability} />
 						<RatingCell label="Behaviour" value={averages.behaviour} />
 					</div>
@@ -83,27 +101,71 @@ function SnitchDetailPage() {
 					</p>
 				)}
 
-				{reviews.map((r) => (
-					<Card key={r.id}>
-						<CardHeader>
-							<CardTitle className="text-sm font-medium">
-								{r.authorName}
-							</CardTitle>
-							<CardDescription>
-								{new Date(r.createdAt).toLocaleDateString()}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="mb-2 flex gap-4 text-xs text-muted-foreground">
-								<span>Teamwork <strong className="text-foreground">{r.teamwork}</strong></span>
-								<span>Communication <strong className="text-foreground">{r.communication}</strong></span>
-								<span>Reliability <strong className="text-foreground">{r.reliability}</strong></span>
-								<span>Behaviour <strong className="text-foreground">{r.behaviour}</strong></span>
-							</div>
-							<p className="text-sm text-muted-foreground">{r.description}</p>
-						</CardContent>
-					</Card>
-				))}
+				{reviews.map((r) => {
+					const isMine = session?.user.id === r.authorId;
+					const wasEdited =
+						new Date(r.updatedAt).getTime() !==
+						new Date(r.createdAt).getTime();
+
+					return (
+						<Card key={r.id}>
+							<CardHeader className="flex flex-row items-start justify-between">
+								<div>
+									<CardTitle className="text-sm font-medium">
+										{r.authorName}
+									</CardTitle>
+									<CardDescription>
+										{formatDateTime(r.createdAt)}
+										{wasEdited && (
+											<span className="ml-1 italic">
+												(edited {formatDateTime(r.updatedAt)})
+											</span>
+										)}
+									</CardDescription>
+								</div>
+								{isMine && (
+									<EditReviewModal
+										reviewId={r.id}
+										initialRatings={{
+											teamwork: r.teamwork,
+											communication: r.communication,
+											reliability: r.reliability,
+											behaviour: r.behaviour,
+										}}
+										initialDescription={r.description}
+									/>
+								)}
+							</CardHeader>
+							<CardContent>
+								<div className="mb-2 flex gap-4 text-xs text-muted-foreground">
+									<span>
+										Teamwork{" "}
+										<strong className="text-foreground">{r.teamwork}</strong>
+									</span>
+									<span>
+										Comms{" "}
+										<strong className="text-foreground">
+											{r.communication}
+										</strong>
+									</span>
+									<span>
+										Reliability{" "}
+										<strong className="text-foreground">
+											{r.reliability}
+										</strong>
+									</span>
+									<span>
+										Behaviour{" "}
+										<strong className="text-foreground">{r.behaviour}</strong>
+									</span>
+								</div>
+								<p className="text-sm text-muted-foreground">
+									{r.description}
+								</p>
+							</CardContent>
+						</Card>
+					);
+				})}
 			</div>
 		</div>
 	);
