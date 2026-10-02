@@ -175,7 +175,8 @@ export const searchSnitches = createServerFn({ method: "GET" })
 // ─────────────────────────────────────────────
 // getSnitchDetail
 // Public read — full profile with averaged ratings and all reviews.
-// Reviewer identity shows name only (no student ID on user anymore).
+// Includes authorId (so the client can tell "is this my review?") and
+// updatedAt (so we can tell if a review has been edited since posting).
 // ─────────────────────────────────────────────
 
 export const getSnitchDetail = createServerFn({ method: "GET" })
@@ -192,12 +193,14 @@ export const getSnitchDetail = createServerFn({ method: "GET" })
 		const reviews = await db
 			.select({
 				id: review.id,
+				authorId: review.authorId,
 				teamwork: review.teamwork,
 				communication: review.communication,
 				reliability: review.reliability,
 				behaviour: review.behaviour,
 				description: review.description,
 				createdAt: review.createdAt,
+				updatedAt: review.updatedAt,
 				authorName: user.name,
 			})
 			.from(review)
@@ -315,6 +318,65 @@ export const addReview = createServerFn({ method: "POST" })
 			}
 			throw err;
 		}
+
+		return { ok: true as const };
+	});
+
+// ─────────────────────────────────────────────
+// updateReview
+// Lets a user edit a review they already wrote. Only the original
+// author can edit — enforced server-side, not just hidden in the UI.
+// ─────────────────────────────────────────────
+
+type UpdateReviewInput = Ratings & {
+	reviewId: string;
+	description: string;
+};
+
+export const updateReview = createServerFn({ method: "POST" })
+	.validator((data: UpdateReviewInput) => data)
+	.handler(async ({ data }) => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+
+		if (!session) {
+			return { ok: false as const, reason: "unauthenticated" as const };
+		}
+		if (!session.user.emailVerified) {
+			return { ok: false as const, reason: "unverified" as const };
+		}
+
+		const description = data.description?.trim();
+		if (!description) {
+			return { ok: false as const, reason: "invalid_input" as const };
+		}
+		if (!ratingsAreValid(data)) {
+			return { ok: false as const, reason: "invalid_rating" as const };
+		}
+
+		const [existing] = await db
+			.select({ authorId: review.authorId })
+			.from(review)
+			.where(eq(review.id, data.reviewId))
+			.limit(1);
+
+		if (!existing) {
+			return { ok: false as const, reason: "not_found" as const };
+		}
+		if (existing.authorId !== session.user.id) {
+			return { ok: false as const, reason: "forbidden" as const };
+		}
+
+		await db
+			.update(review)
+			.set({
+				teamwork: data.teamwork,
+				communication: data.communication,
+				reliability: data.reliability,
+				behaviour: data.behaviour,
+				description,
+			})
+			.where(eq(review.id, data.reviewId));
 
 		return { ok: true as const };
 	});
