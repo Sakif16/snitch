@@ -148,6 +148,9 @@ export const review = pgTable(
 
 		description: text("description").notNull(),
 
+		// true once the author has used their single allowed edit.
+		edited: boolean("edited").default(false).notNull(),
+
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		// Updates automatically whenever a review row is edited.
 		// Lets us show "(edited)" and the exact edit time if we want to later.

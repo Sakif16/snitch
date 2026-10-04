@@ -1,5 +1,6 @@
-import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { useState } from "react";
+import { Button } from "#/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -9,7 +10,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
-import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
 import { updateReview } from "#/lib/snitch";
 
@@ -64,6 +64,7 @@ export function EditReviewModal({
 	const router = useRouter();
 
 	const [open, setOpen] = useState(false);
+	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [ratings, setRatings] = useState<Ratings>(initialRatings);
 	const [description, setDescription] = useState(initialDescription);
 	const [error, setError] = useState("");
@@ -73,9 +74,11 @@ export function EditReviewModal({
 		setRatings(initialRatings);
 		setDescription(initialDescription);
 		setError("");
+		setConfirmOpen(false);
 	}
 
-	async function handleSubmit() {
+	// Step 1: validate the form, then ask for confirmation.
+	function handleSaveClick() {
 		setError("");
 
 		const allRated = Object.values(ratings).every((v) => v >= 1);
@@ -88,11 +91,17 @@ export function EditReviewModal({
 			return;
 		}
 
+		setConfirmOpen(true);
+	}
+
+	// Step 2: the user confirmed — actually save.
+	async function handleConfirmedSubmit() {
 		setLoading(true);
 		const result = await updateReview({
 			data: { reviewId, ...ratings, description: description.trim() },
 		});
 		setLoading(false);
+		setConfirmOpen(false);
 
 		if (!result.ok) {
 			const messages: Record<string, string> = {
@@ -100,6 +109,7 @@ export function EditReviewModal({
 				unverified: "Please verify your email before editing.",
 				not_found: "This review no longer exists.",
 				forbidden: "You can only edit your own review.",
+				already_edited: "You have already edited this review once.",
 				invalid_input: "Please fill in all fields.",
 				invalid_rating: "Ratings must be between 1 and 5.",
 			};
@@ -130,7 +140,7 @@ export function EditReviewModal({
 					<DialogTitle>Edit your review</DialogTitle>
 					<DialogDescription>
 						Update your ratings or description. Your name stays visible as
-						the author.
+						the author. You can edit your review only once.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -160,10 +170,39 @@ export function EditReviewModal({
 					<Button variant="outline" onClick={() => setOpen(false)}>
 						Cancel
 					</Button>
-					<Button variant="custom" onClick={handleSubmit} disabled={loading}>
-						{loading ? "Saving..." : "Save changes"}
+					<Button variant="custom" onClick={handleSaveClick} disabled={loading}>
+						Save changes
 					</Button>
 				</DialogFooter>
+
+				{/* Confirmation modal */}
+				<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+					<DialogContent showCloseButton={false}>
+						<DialogHeader>
+							<DialogTitle>Edit only once</DialogTitle>
+							<DialogDescription>
+								You can edit your review only once. After you save, you won't
+								be able to change it again. Do you want to continue?
+							</DialogDescription>
+						</DialogHeader>
+						<DialogFooter>
+							<Button
+								variant="outline"
+								onClick={() => setConfirmOpen(false)}
+								disabled={loading}
+							>
+								Go back
+							</Button>
+							<Button
+								variant="custom"
+								onClick={handleConfirmedSubmit}
+								disabled={loading}
+							>
+								{loading ? "Saving..." : "Yes, save my edit"}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 			</DialogContent>
 		</Dialog>
 	);

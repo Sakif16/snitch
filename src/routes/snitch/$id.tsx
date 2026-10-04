@@ -1,4 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { AddReviewModal } from "#/components/AddReviewModal";
+import { EditReviewModal } from "#/components/EditReviewModal";
 import {
 	Card,
 	CardContent,
@@ -7,8 +9,6 @@ import {
 	CardTitle,
 } from "#/components/ui/card";
 import { authClient } from "#/lib/auth-client";
-import { AddReviewModal } from "#/components/AddReviewModal";
-import { EditReviewModal } from "#/components/EditReviewModal";
 import { getSnitchDetail } from "#/lib/snitch";
 
 export const Route = createFileRoute("/snitch/$id")({
@@ -103,9 +103,8 @@ function SnitchDetailPage() {
 
 				{reviews.map((r) => {
 					const isMine = session?.user.id === r.authorId;
-					const wasEdited =
-						new Date(r.updatedAt).getTime() !==
-						new Date(r.createdAt).getTime();
+					// Edit button is only shown while the single allowed edit is unused.
+					const canEdit = isMine && !r.edited;
 
 					return (
 						<Card key={r.id}>
@@ -116,14 +115,14 @@ function SnitchDetailPage() {
 									</CardTitle>
 									<CardDescription>
 										{formatDateTime(r.createdAt)}
-										{wasEdited && (
+										{r.edited && (
 											<span className="ml-1 italic">
 												(edited {formatDateTime(r.updatedAt)})
 											</span>
 										)}
 									</CardDescription>
 								</div>
-								{isMine && (
+								{canEdit && (
 									<EditReviewModal
 										reviewId={r.id}
 										initialRatings={{

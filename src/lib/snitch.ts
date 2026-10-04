@@ -175,8 +175,8 @@ export const searchSnitches = createServerFn({ method: "GET" })
 // ─────────────────────────────────────────────
 // getSnitchDetail
 // Public read — full profile with averaged ratings and all reviews.
-// Includes authorId (so the client can tell "is this my review?") and
-// updatedAt (so we can tell if a review has been edited since posting).
+// Includes authorId (so the client can tell "is this my review?"),
+// updatedAt, and `edited` (so the UI knows if the single edit is used).
 // ─────────────────────────────────────────────
 
 export const getSnitchDetail = createServerFn({ method: "GET" })
@@ -199,6 +199,7 @@ export const getSnitchDetail = createServerFn({ method: "GET" })
 				reliability: review.reliability,
 				behaviour: review.behaviour,
 				description: review.description,
+				edited: review.edited,
 				createdAt: review.createdAt,
 				updatedAt: review.updatedAt,
 				authorName: user.name,
@@ -324,8 +325,9 @@ export const addReview = createServerFn({ method: "POST" })
 
 // ─────────────────────────────────────────────
 // updateReview
-// Lets a user edit a review they already wrote. Only the original
-// author can edit — enforced server-side, not just hidden in the UI.
+// Lets a user edit a review they already wrote — but only ONCE.
+// Only the original author can edit, and once `edited` is true no
+// further edits are accepted. Enforced server-side, not just in the UI.
 // ─────────────────────────────────────────────
 
 type UpdateReviewInput = Ratings & {
@@ -355,7 +357,7 @@ export const updateReview = createServerFn({ method: "POST" })
 		}
 
 		const [existing] = await db
-			.select({ authorId: review.authorId })
+			.select({ authorId: review.authorId, edited: review.edited })
 			.from(review)
 			.where(eq(review.id, data.reviewId))
 			.limit(1);
@@ -366,8 +368,13 @@ export const updateReview = createServerFn({ method: "POST" })
 		if (existing.authorId !== session.user.id) {
 			return { ok: false as const, reason: "forbidden" as const };
 		}
+		if (existing.edited) {
+			return { ok: false as const, reason: "already_edited" as const };
+		}
 
-		await db
+		// The `edited = false` condition in the WHERE makes this safe even if
+		// two edit requests arrive at the same time: only one can match.
+		const updated = await db
 			.update(review)
 			.set({
 				teamwork: data.teamwork,
@@ -375,8 +382,14 @@ export const updateReview = createServerFn({ method: "POST" })
 				reliability: data.reliability,
 				behaviour: data.behaviour,
 				description,
+				edited: true,
 			})
-			.where(eq(review.id, data.reviewId));
+			.where(and(eq(review.id, data.reviewId), eq(review.edited, false)))
+			.returning({ id: review.id });
+
+		if (updated.length === 0) {
+			return { ok: false as const, reason: "already_edited" as const };
+		}
 
 		return { ok: true as const };
 	});
