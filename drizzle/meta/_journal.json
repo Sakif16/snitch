@@ -15,6 +15,13 @@
       "when": 1790966442793,
       "tag": "0001_amusing_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791126882754,
+      "tag": "0002_white_glorian",
+      "breakpoints": true
     }
   ]
 }
