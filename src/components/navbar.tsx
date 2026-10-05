@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ThemeToggle } from "#/components/ThemeToggle";
 import { authClient } from "#/lib/auth-client";
 
 export function Navbar() {
@@ -22,6 +23,7 @@ export function Navbar() {
 								{session.user.name}
 							</span>
 							<button
+								type="button"
 								onClick={() => authClient.signOut()}
 								className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
 							>
@@ -44,6 +46,8 @@ export function Navbar() {
 							</Link>
 						</>
 					)}
+
+					<ThemeToggle />
 				</div>
 			</div>
 		</nav>
