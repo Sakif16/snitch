@@ -5,11 +5,12 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { nitro } from 'nitro/vite'
 import neon from './neon-vite-plugin.ts'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
-  plugins: [devtools(), neon, tailwindcss(), tanstackStart(), viteReact()],
+  plugins: [devtools(), neon, tailwindcss(), tanstackStart(), nitro(), viteReact()],
 })
 
 export default config
