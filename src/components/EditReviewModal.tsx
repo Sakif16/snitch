@@ -56,10 +56,12 @@ export function EditReviewModal({
 	reviewId,
 	initialRatings,
 	initialDescription,
+	anonymous = false,
 }: {
 	reviewId: string;
 	initialRatings: Ratings;
 	initialDescription: string;
+	anonymous?: boolean;
 }) {
 	const router = useRouter();
 
@@ -139,8 +141,11 @@ export function EditReviewModal({
 				<DialogHeader>
 					<DialogTitle>Edit your review</DialogTitle>
 					<DialogDescription>
-						Update your ratings or description. Your name stays visible as
-						the author. You can edit your review only once.
+						Update your ratings or description.{" "}
+						{anonymous
+							? "Your review stays anonymous."
+							: "Your name stays visible as the author."}{" "}
+						You can edit your review only once.
 					</DialogDescription>
 				</DialogHeader>
 
