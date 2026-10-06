@@ -1,257 +1,199 @@
-Welcome to your new TanStack Start app! 
+# snitch.
 
-# Getting Started
+## Intro
+A hobby-project, a platform where verified university students share honest experiences about working with groupmates, so a person can choose his/her teammates wisely.
 
-To run this application:
+---
 
+## Description
+snitch is a full-stack web application for university students who want more transparency before starting a group project. Students sign up with their official university email, find a classmate by name or student ID, and read or post experiences about teamwork, communication, reliability and behaviour.
+
+Every account is tied to one university through its email domain, and email verification is required before anyone can sign in or post. Reviews carry the author's name, so the platform is built around accountability rather than anonymity.
+
+---
+
+## Website
+Live at: https://snitch-qbku.onrender.com
+
+---
+
+### What you can do:
+- Sign up with your official university email (the university is detected automatically from the email domain)
+- Verify your email through a link sent to your inbox before signing in
+- Accept the Terms and Conditions during signup
+- Browse by university and search for students by name or student ID
+- Post a new snitch for a student at your own university
+- Rate a groupmate from 1 to 5 on teamwork, communication, reliability and behaviour, with a written description
+- Add your own experience to an existing snitch (one review per user per snitch, same university only)
+- Edit your review once, with a confirmation step before saving
+- See averaged ratings for each student across all reviews
+- Reveal a reviewer's email on demand with "show email" (logged-in, verified users only)
+- Contact support through a form that emails the team directly
+- Switch between light and dark mode, with no flash on page load
+
+### Supported universities
+
+| Tag | University | Accepted email domains |
+|---|---|---|
+| BRACU | BRAC University | `g.bracu.ac.bd`|
+| NSU | North South University | `northsouth.edu` |
+| UIU | United International University | `uiu.ac.bd` |
+| AUST | Ahsanullah University of Science & Technology | `aust.edu` |
+| EWU | East West University | `ewubd.edu` |
+| DIU | Daffodil International University | `diu.edu.bd` |
+
+To add another university, update the `university` enum in `src/db/schema.ts`, generate a migration, and add its domain to `src/lib/universities.ts`.
+
+---
+
+## Tech Stack
+- **TanStack Start** (React 19, TanStack Router with file-based routing, server functions)
+- **TypeScript**
+- **Tailwind CSS v4** and **shadcn/ui** (Radix UI, Lucide icons)
+- **Better Auth** (email and password authentication, email verification, sessions)
+- **PostgreSQL** on **Neon** (serverless database)
+- **Drizzle ORM** and **drizzle-kit** (schema and migrations)
+- **Mailjet** (transactional email over its HTTP API: verification emails and support messages)
+- **Vite**, **Nitro** (production server build)
+- **Biome** (linting and formatting)
+- **Vitest** (testing)
+
+---
+
+## Local Setup
+
+### Requirements
+- Node.js 22 or later
+- pnpm
+- A PostgreSQL database (for example, a free Neon project)
+- A Mailjet account with a verified sender address (only needed to send real emails)
+
+### 1) Install dependencies
 ```bash
 pnpm install
+```
+
+### 2) Create your `.env.local`
+Create a file named `.env.local` in the project root and fill in the values below. Never commit this file.
+
+| Variable | Required | What it's for |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string (Neon) |
+| `BETTER_AUTH_SECRET` | Yes | Random string used to sign sessions (for example `openssl rand -base64 32`) |
+| `BETTER_AUTH_URL` | Yes | The app's URL, for example `http://localhost:3000`. In production, set it to your deployed URL or verification links will point to localhost |
+| `MAILJET_API_KEY` | Yes, for email | Mailjet API key |
+| `MAILJET_SECRET_KEY` | Yes, for email | Mailjet secret key |
+| `MAIL_FROM` | Yes, for email | Sender address. Must be verified as a sender in Mailjet |
+| `SUPPORT_EMAIL` | Optional | Inbox that receives support form messages. Defaults to `snitch.business1@gmail.com` |
+
+Without the Mailjet variables the app still runs, but verification emails and support messages will fail (the error is printed in the server log) and new users will not be able to verify their accounts.
+
+### 3) Set up the database
+Apply the schema to your database:
+
+```bash
+pnpm db:migrate
+```
+
+(For quick experiments you can use `pnpm db:push` instead, which syncs the schema without migration files.)
+
+### 4) Start the app
+```bash
 pnpm dev
 ```
+Then open http://localhost:3000.
 
-# Building For Production
+### Useful scripts
 
-To build this application for production:
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Start the dev server on port 3000 |
+| `pnpm build` | Build for production |
+| `pnpm preview` | Preview the production build |
+| `pnpm test` | Run tests with Vitest |
+| `pnpm check` | Lint and format check with Biome |
+| `pnpm db:generate` | Generate a migration after changing `src/db/schema.ts` |
+| `pnpm db:migrate` | Apply migrations |
+| `pnpm db:studio` | Open Drizzle Studio to browse the database |
 
+---
+
+## Deployment
+1. Build the app with `pnpm build`.
+2. Start it with `node .output/server/index.mjs`.
+3. Set every variable from the table above in your host's environment settings, including `BETTER_AUTH_URL` set to your public URL.
+4. Run `pnpm db:migrate` against your production database.
+
+Many free hosts block outbound SMTP ports. That is why email goes through Mailjet's HTTP API, which works over port 443 on any host.
+
+---
+
+## Contributions
+Contributions are welcome!
+
+### You can contribute by:
+- Reporting bugs or issues
+- Suggesting new features or improvements
+- Refactoring code for better performance or readability
+- Improving the UI or making it more responsive
+- Enhancing documentation and onboarding
+
+### How to contribute:
+
+### 1) Fork the repository
+
+### 2) Clone your fork
 ```bash
-pnpm build
+git clone https://github.com/YOUR_USERNAME/snitch.git
 ```
 
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
-
+### 3) Create a new branch
 ```bash
-pnpm test
+git checkout -b feature-name
 ```
 
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
-
-## Linting & Formatting
-
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
-
-
+### 4) Make your changes and commit
 ```bash
-pnpm lint
-pnpm format
-pnpm check
+git commit -m "Add: your feature description"
 ```
 
-
-## Shadcn
-
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
-
+### 5) Push to your fork
 ```bash
-pnpm dlx shadcn@latest add button
+git push origin feature-name
 ```
 
+### 6) Open a Pull Request on GitHub
 
-## Setting up Better Auth
+---
 
-1. Generate and set the `BETTER_AUTH_SECRET` environment variable in your `.env.local`:
+## ⚠️ Known Issues
+- Verification emails can land in the spam folder, because the sender address has no custom domain authentication
+- Without a verified email domain, deliverability depends on the provider's sender verification
+- On free hosting tiers, the first request after a period of inactivity can be slow
+- There is no "forgot password" or "resend verification email" flow yet
+- Student ID matching is exact, so IDs that differ only in letter case count as different students
+- Creating a snitch and its first review are two separate database inserts, because the Neon HTTP driver does not support multi-statement transactions. In the rare case the second insert fails, a snitch can exist with zero reviews
+- Search runs on every keystroke without a debounce and returns at most 10 results
+- All posts are unverified personal opinions. The platform does not check the accuracy of anything users write
 
-   ```bash
-   pnpm dlx @better-auth/cli secret
-   ```
+---
 
-2. Visit the [Better Auth documentation](https://www.better-auth.com) to unlock the full potential of authentication in your app.
+## Disclaimer
+snitch. is an independent project and is not affiliated with any university. All reviews are the personal opinions of the users who post them. The operator does not verify content and is not responsible for disputes, false information or any resulting harm. Users must accept the Terms and Conditions at signup.
 
-### Adding a Database (Optional)
+---
 
-Better Auth can work in stateless mode, but to persist user data, add a database:
+## Future Development
+- Forgot password and resend verification email
+- Report button on reviews, plus moderation tools
+- Debounced search, pagination and sorting or filtering of results
+- Storing which version of the Terms each user accepted, and a standalone Terms page
+- Case-insensitive student ID matching
+- Account deletion and data export
+- Support for more universities
+- Better loading, empty and error states across the app
 
-```typescript
-// src/lib/auth.ts
-import { betterAuth } from "better-auth";
-import { Pool } from "pg";
+---
 
-export const auth = betterAuth({
-  database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-  }),
-  // ... rest of config
-});
-```
-
-Then run migrations:
-
-```bash
-pnpm dlx @better-auth/cli migrate
-```
-
-
-## Setting up Neon
-
-When running the `dev` command, `vite-plugin-neon-new` will identify there is not a database setup. It will then create and seed a claimable database.
-
-It is the same process as [Neon Launchpad](https://neon.new).
-
-> [!IMPORTANT]  
-> Claimable databases expire in 72 hours.
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+### Fun fact?
+The worse the experience, the better the app..?
