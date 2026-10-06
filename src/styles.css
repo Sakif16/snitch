@@ -63,6 +63,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --sea-ink: #d7ece8;
   --sea-ink-soft: #afcdc8;
   --lagoon: #60d7cf;
