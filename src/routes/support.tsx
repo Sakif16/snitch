@@ -72,7 +72,7 @@ function SupportPage() {
 	}
 
 	return (
-		<div className="flex min-h-[calc(100vh-120px)] items-center justify-center bg-background px-4 py-10">
+		<div className="flex min-h-[calc(100vh-93px)] items-center justify-center bg-background px-4 py-10">
 			<Card className="w-full max-w-md">
 				<CardHeader className="space-y-1 text-center">
 					<CardTitle className="font-mono text-xl">

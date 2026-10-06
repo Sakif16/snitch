@@ -77,7 +77,7 @@ function SignupPage() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-background px-4">
+		<div className="flex min-h-[calc(100vh-93px)] items-center justify-center bg-background px-4 py-6">
 			<Card className="w-full max-w-sm">
 				<CardHeader className="space-y-1 text-center">
 					<CardTitle className="font-mono text-xl">
