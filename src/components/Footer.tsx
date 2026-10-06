@@ -2,9 +2,9 @@ import { Link } from "@tanstack/react-router";
 
 export function Footer() {
 	return (
-		<footer className="border-t border-border bg-background">
-			<div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-4 text-xs text-muted-foreground sm:flex-row">
-				<p>© {new Date().getFullYear()} Sakib Muhtasim. All rights reserved.</p>
+		<footer className="fixed inset-x-0 bottom-0 z-40 h-9 border-t border-border bg-background">
+			<div className="mx-auto flex h-full max-w-5xl items-center justify-between px-5 text-[11px] text-muted-foreground">
+				<p>© {new Date().getFullYear()} Sakib Muhtasim</p>
 				<Link
 					to="/support"
 					className="text-muted-foreground! no-underline hover:text-foreground!"

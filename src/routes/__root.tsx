@@ -52,9 +52,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
-      <body className="flex min-h-screen flex-col">
+      <body>
         <Navbar />
-        <main className="flex-1">{children}</main>
+        {/* pb-9 = footer height (h-9), so content never hides behind it */}
+        <main className="pb-9">{children}</main>
         <Footer />
         <TanStackDevtools
           config={{
