@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { authClient } from "#/lib/auth-client";
 import { DOMAIN_UNIVERSITY_MAP } from "#/lib/universities";
@@ -149,9 +149,9 @@ function SignupPage() {
 
 						<p className="text-center text-sm text-muted-foreground">
 							Already have an account?{" "}
-							<a href="/signin" className="text-red-600 hover:underline">
+							<Link to="/signin" className="text-red-600 hover:underline">
 								Log in
-							</a>
+							</Link>
 						</p>
 					</form>
 				</CardContent>

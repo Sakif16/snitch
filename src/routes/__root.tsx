@@ -5,6 +5,20 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import appCss from '../styles.css?url'
 import { Navbar } from '#/components/navbar'
 
+// Runs in <head> before first paint so the correct theme class is on <html>
+// before anything is rendered. Same logic as ThemeToggle.
+const themeScript = `
+(function () {
+  try {
+    var stored = localStorage.getItem("theme");
+    var dark = stored
+      ? stored === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (dark) document.documentElement.classList.add("dark");
+  } catch (e) {}
+})();
+`
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -31,12 +45,14 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static theme bootstrap, must run before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
       <body>
-        <Navbar/>
+        <Navbar />
         {children}
         <TanStackDevtools
           config={{
