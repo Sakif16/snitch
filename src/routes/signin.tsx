@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { PasswordInput } from "#/components/PasswordInput";
 import { authClient } from "#/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,9 +74,8 @@ function LoginPage() {
 
 						<div className="space-y-2">
 							<Label htmlFor="password">Password</Label>
-							<Input
+							<PasswordInput
 								id="password"
-								type="password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								required
