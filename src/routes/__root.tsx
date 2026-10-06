@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
+import { Footer } from '#/components/Footer'
 import { Navbar } from '#/components/navbar'
 
 // Runs in <head> before first paint so the correct theme class is on <html>
@@ -51,9 +52,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
-      <body>
+      <body className="flex min-h-screen flex-col">
         <Navbar />
-        {children}
+        <main className="flex-1">{children}</main>
+        <Footer />
         <TanStackDevtools
           config={{
             position: 'bottom-right',
