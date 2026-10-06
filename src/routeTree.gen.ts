@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SnitchIdRouteImport } from './routes/snitch/$id'
 import { Route as UniversityTagRouteImport } from './routes/university/$tag'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -29,6 +30,11 @@ const SigninRoute = SigninRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SnitchIdRoute = SnitchIdRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/support': typeof SupportRoute
   '/snitch/$id': typeof SnitchIdRoute
   '/university/$tag': typeof UniversityTagRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/support': typeof SupportRoute
   '/snitch/$id': typeof SnitchIdRoute
   '/university/$tag': typeof UniversityTagRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/support': typeof SupportRoute
   '/snitch/$id': typeof SnitchIdRoute
   '/university/$tag': typeof UniversityTagRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/signin'
     | '/signup'
+    | '/support'
     | '/snitch/$id'
     | '/university/$tag'
     | '/api/auth/$'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/signin'
     | '/signup'
+    | '/support'
     | '/snitch/$id'
     | '/university/$tag'
     | '/api/auth/$'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/signin'
     | '/signup'
+    | '/support'
     | '/snitch/$id'
     | '/university/$tag'
     | '/api/auth/$'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  SupportRoute: typeof SupportRoute
   SnitchIdRoute: typeof SnitchIdRoute
   UniversityTagRoute: typeof UniversityTagRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/snitch/$id': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  SupportRoute: SupportRoute,
   SnitchIdRoute: SnitchIdRoute,
   UniversityTagRoute: UniversityTagRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
