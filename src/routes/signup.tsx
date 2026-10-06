@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { TermsModal } from "#/components/TermsModal";
 import { authClient } from "#/lib/auth-client";
 import { DOMAIN_UNIVERSITY_MAP } from "#/lib/universities";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,13 @@ function SignupPage() {
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [termsOpen, setTermsOpen] = useState(false);
 
 	const domain = email.split("@")[1] ?? "";
 	const detectedUniversity = DOMAIN_UNIVERSITY_MAP[domain] ?? null;
 
-	async function handleSubmit(e: React.FormEvent) {
+	// Step 1: validate the form, then show the terms instead of signing up.
+	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		setError("");
 
@@ -50,6 +53,11 @@ function SignupPage() {
 			return;
 		}
 
+		setTermsOpen(true);
+	}
+
+	// Step 2: the user agreed, so create the account.
+	async function handleAgree() {
 		setLoading(true);
 
 		const { error: authError } = await authClient.signUp.email({
@@ -59,6 +67,7 @@ function SignupPage() {
 		});
 
 		setLoading(false);
+		setTermsOpen(false);
 
 		if (authError) {
 			setError(authError.message ?? "Something went wrong. Please try again.");
@@ -144,8 +153,12 @@ function SignupPage() {
 						{error && <p className="text-sm text-red-600">{error}</p>}
 
 						<Button type="submit" className="w-full" disabled={loading}>
-							{loading ? "Creating account..." : "Create account"}
+							Create account
 						</Button>
+
+						<p className="text-center text-xs text-muted-foreground">
+							You'll be asked to accept our Terms and Conditions next.
+						</p>
 
 						<p className="text-center text-sm text-muted-foreground">
 							Already have an account?{" "}
@@ -156,6 +169,13 @@ function SignupPage() {
 					</form>
 				</CardContent>
 			</Card>
+
+			<TermsModal
+				open={termsOpen}
+				onOpenChange={setTermsOpen}
+				onAgree={handleAgree}
+				loading={loading}
+			/>
 		</div>
 	);
 }
