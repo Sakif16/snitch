@@ -52,6 +52,34 @@ export async function sendVerificationEmail(to: string, url: string) {
 	}
 }
 
+export async function sendPasswordResetEmail(to: string, url: string) {
+	// auth.ts calls this without awaiting, so errors must be caught here.
+	try {
+		const safeUrl = escapeHtml(url);
+		await sendViaMailjet({
+			From: { Email: process.env.MAIL_FROM, Name: "snitch." },
+			To: [{ Email: to }],
+			Subject: "Reset your password — snitch.",
+			TextPart: `Reset your snitch. password using this link (valid for 1 hour): ${url}\n\nIf you didn't request this, you can ignore this email. Your password won't change.`,
+			HTMLPart: `
+				<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+					<h2 style="color: #E8171F;">snitch.</h2>
+					<p>We received a request to reset the password for your account. Click the button below to choose a new one. This link works once and expires in 1 hour.</p>
+					<a href="${safeUrl}" style="display: inline-block; background: #E8171F; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; margin: 16px 0;">
+						Reset password
+					</a>
+					<p style="color: #666; font-size: 13px;">If the button doesn't work, copy and paste this link:</p>
+					<p style="color: #666; font-size: 13px; word-break: break-all;">${safeUrl}</p>
+					<p style="color: #666; font-size: 13px;">If you didn't request this, ignore this email. Your password won't change.</p>
+				</div>
+			`,
+		});
+		console.log(`Password reset email sent to ${to}`);
+	} catch (err) {
+		console.error("Failed to send password reset email:", err);
+	}
+}
+
 const SUPPORT_INBOX =
 	process.env.SUPPORT_EMAIL ?? "snitch.business1@gmail.com";
 
