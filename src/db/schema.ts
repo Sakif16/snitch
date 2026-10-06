@@ -148,6 +148,10 @@ export const review = pgTable(
 
 		description: text("description").notNull(),
 
+		// true when the author used their one-time anonymous post. The author's
+		// name and email are never sent to other users for these reviews.
+		anonymous: boolean("anonymous").default(false).notNull(),
+
 		// true once the author has used their single allowed edit.
 		edited: boolean("edited").default(false).notNull(),
 
@@ -169,6 +173,19 @@ export const review = pgTable(
 		index("review_authorId_idx").on(table.authorId),
 	],
 );
+
+
+// One row per user who has used their lifetime anonymous post.
+// The PRIMARY KEY on user_id is the actual enforcement: a second insert for
+// the same user fails at the database level, even under concurrent requests.
+export const anonymousPost = pgTable("anonymous_post", {
+	userId: text("user_id")
+		.primaryKey()
+		.references(() => user.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
 
 // ─────────────────────────────────────────────
 // Relations
@@ -213,3 +230,5 @@ export const reviewRelations = relations(review, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+

@@ -47,9 +47,10 @@ function SnitchDetailPage() {
 	const { snitch, reviews, averages } = Route.useLoaderData();
 	const { data: session } = authClient.useSession();
 
-	const myReview = session
-		? reviews.find((r) => r.authorId === session.user.id)
-		: undefined;
+	// `isMine` is computed on the server (the client never receives author
+	// ids). Requiring a live session here also hides the edit/add controls
+	// immediately if the user signs out while the page is open.
+	const myReview = session ? reviews.find((r) => r.isMine) : undefined;
 
 	return (
 		<div className="mx-auto max-w-2xl px-5 py-10">
@@ -79,7 +80,7 @@ function SnitchDetailPage() {
 				<CardContent>
 					<div className="grid grid-cols-4 divide-x divide-border rounded-md border border-border">
 						<RatingCell label="Teamwork" value={averages.teamwork} />
-						<RatingCell label="Communication" value={averages.communication} />
+						<RatingCell label="Comms" value={averages.communication} />
 						<RatingCell label="Reliability" value={averages.reliability} />
 						<RatingCell label="Behaviour" value={averages.behaviour} />
 					</div>
@@ -103,7 +104,7 @@ function SnitchDetailPage() {
 				)}
 
 				{reviews.map((r) => {
-					const isMine = session?.user.id === r.authorId;
+					const isMine = !!session && r.isMine;
 					// Edit button is only shown while the single allowed edit is unused.
 					const canEdit = isMine && !r.edited;
 
@@ -113,9 +114,15 @@ function SnitchDetailPage() {
 								<div>
 									<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
 										<CardTitle className="text-sm font-medium">
-											{r.authorName}
+											{r.anonymous ? "Anonymous" : r.authorName}
+											{r.anonymous && isMine && (
+												<span className="ml-1 font-normal text-muted-foreground">
+													(you)
+												</span>
+											)}
 										</CardTitle>
-										<ReviewAuthorEmail reviewId={r.id} />
+										{/* Anonymous authors' emails are never available. */}
+										{!r.anonymous && <ReviewAuthorEmail reviewId={r.id} />}
 									</div>
 									<CardDescription className="mt-1">
 										{formatDateTime(r.createdAt)}
@@ -129,6 +136,7 @@ function SnitchDetailPage() {
 								{canEdit && (
 									<EditReviewModal
 										reviewId={r.id}
+										anonymous={r.anonymous}
 										initialRatings={{
 											teamwork: r.teamwork,
 											communication: r.communication,
@@ -146,7 +154,7 @@ function SnitchDetailPage() {
 										<strong className="text-foreground">{r.teamwork}</strong>
 									</span>
 									<span>
-										Communication{" "}
+										Comms{" "}
 										<strong className="text-foreground">
 											{r.communication}
 										</strong>

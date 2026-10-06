@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "#/db/index.ts";
-import { review, snitch, user } from "#/db/schema";
+import { anonymousPost, review, snitch, user } from "#/db/schema";
 import { auth } from "#/lib/auth";
 
 // ─────────────────────────────────────────────
@@ -31,17 +31,58 @@ function isUniqueViolation(err: unknown): boolean {
 	return code === "23505";
 }
 
+async function hasUsedAnonymous(userId: string) {
+	const [row] = await db
+		.select({ userId: anonymousPost.userId })
+		.from(anonymousPost)
+		.where(eq(anonymousPost.userId, userId))
+		.limit(1);
+	return !!row;
+}
+
+// ─────────────────────────────────────────────
+// getAnonymousStatus
+// Lets the create-snitch modal check, when the user flips the anonymous
+// toggle, whether their one-time anonymous post is still available.
+// This is only a convenience check — createSnitch enforces the rule.
+// ─────────────────────────────────────────────
+
+export const getAnonymousStatus = createServerFn({ method: "POST" }).handler(
+	async () => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+
+		if (!session) {
+			return { ok: false as const, reason: "unauthenticated" as const };
+		}
+		if (!session.user.emailVerified) {
+			return { ok: false as const, reason: "unverified" as const };
+		}
+
+		const used = await hasUsedAnonymous(session.user.id);
+		return { ok: true as const, available: !used };
+	},
+);
+
 // ─────────────────────────────────────────────
 // createSnitch
 // First post for a student — creates the snitch AND the first review
-// in one call. If (studentId, university) already exists, returns the
-// existing snitch id instead of creating a duplicate.
+// in ONE atomic transaction (db.batch). If (studentId, university)
+// already exists, nothing is written and the existing snitch id is
+// returned.
+//
+// Anonymous posts: the batch also inserts a row into anonymous_post, whose
+// PRIMARY KEY is user_id. A user can only ever have one such row, so the
+// database itself rejects a second anonymous post — even if two requests
+// race. Because everything is one transaction, a failed post (e.g.
+// duplicate student ID) never uses up the user's anonymous slot.
 // ─────────────────────────────────────────────
 
 type CreateSnitchInput = Ratings & {
 	studentName: string;
 	studentId: string;
 	description: string;
+	anonymous?: boolean;
 };
 
 export const createSnitch = createServerFn({ method: "POST" })
@@ -60,6 +101,16 @@ export const createSnitch = createServerFn({ method: "POST" })
 			return { ok: false as const, reason: "no_university" as const };
 		}
 
+		// Strict: only a real boolean is accepted. Anything else is rejected
+		// rather than silently treated as "not anonymous".
+		if (
+			data.anonymous !== undefined &&
+			typeof data.anonymous !== "boolean"
+		) {
+			return { ok: false as const, reason: "invalid_input" as const };
+		}
+		const anonymous = data.anonymous === true;
+
 		const studentName = data.studentName?.trim();
 		const studentId = data.studentId?.trim();
 		const description = data.description?.trim();
@@ -71,28 +122,65 @@ export const createSnitch = createServerFn({ method: "POST" })
 			return { ok: false as const, reason: "invalid_rating" as const };
 		}
 
+		// Fast, friendly check. NOT the real enforcement — the primary key on
+		// anonymous_post.user_id is. This just avoids a pointless transaction.
+		if (anonymous && (await hasUsedAnonymous(session.user.id))) {
+			return {
+				ok: false as const,
+				reason: "anonymous_already_used" as const,
+			};
+		}
+
 		const snitchId = randomUUID();
-		const university = session.user.university;
+		const university = session.user
+			.university as (typeof snitch.$inferInsert)["university"];
+
+		const insertSnitch = db.insert(snitch).values({
+			id: snitchId,
+			studentName,
+			studentId,
+			university,
+			createdById: session.user.id,
+		});
+
+		const insertReview = db.insert(review).values({
+			id: randomUUID(),
+			snitchId,
+			authorId: session.user.id,
+			teamwork: data.teamwork,
+			communication: data.communication,
+			reliability: data.reliability,
+			behaviour: data.behaviour,
+			description,
+			anonymous,
+		});
 
 		try {
-			await db.insert(snitch).values({
-				id: snitchId,
-				studentName,
-				studentId,
-				university: university as (typeof snitch.$inferInsert)["university"],
-				createdById: session.user.id,
-			});
+			if (anonymous) {
+				const claimAnonymous = db
+					.insert(anonymousPost)
+					.values({ userId: session.user.id });
+				// Order matters: statements run in sequence in one transaction.
+				await db.batch([insertSnitch, claimAnonymous, insertReview]);
+			} else {
+				await db.batch([insertSnitch, insertReview]);
+			}
 		} catch (err) {
 			if (isUniqueViolation(err)) {
+				// The whole transaction rolled back. Work out which rule fired.
+				if (anonymous && (await hasUsedAnonymous(session.user.id))) {
+					return {
+						ok: false as const,
+						reason: "anonymous_already_used" as const,
+					};
+				}
+
 				const [existing] = await db
 					.select({ id: snitch.id })
 					.from(snitch)
 					.where(
 						and(
-							eq(
-								snitch.university,
-								university as (typeof snitch.$inferInsert)["university"],
-							),
+							eq(snitch.university, university),
 							eq(snitch.studentId, studentId),
 						),
 					)
@@ -106,22 +194,6 @@ export const createSnitch = createServerFn({ method: "POST" })
 			}
 			throw err;
 		}
-
-		// NOTE: the Neon HTTP driver doesn't support multi-statement
-		// transactions, so this is a separate insert, not wrapped with the
-		// one above. In the unlikely event this fails, you'd be left with
-		// a snitch that has zero reviews — acceptable for now, revisit if
-		// it becomes a real problem.
-		await db.insert(review).values({
-			id: randomUUID(),
-			snitchId,
-			authorId: session.user.id,
-			teamwork: data.teamwork,
-			communication: data.communication,
-			reliability: data.reliability,
-			behaviour: data.behaviour,
-			description,
-		});
 
 		return { ok: true as const, snitchId };
 	});
@@ -175,22 +247,37 @@ export const searchSnitches = createServerFn({ method: "GET" })
 // ─────────────────────────────────────────────
 // getSnitchDetail
 // Public read — full profile with averaged ratings and all reviews.
-// Includes authorId (so the client can tell "is this my review?"),
-// updatedAt, and `edited` (so the UI knows if the single edit is used).
+//
+// PRIVACY: this response is sent to every visitor, so it must never
+// contain anything that identifies an anonymous author:
+//   • the snitch's createdById is NOT selected
+//   • authorId is never returned; the server computes `isMine` instead
+//   • authorName is null for anonymous reviews
+// It is a POST so per-viewer data (isMine) can never be cached/shared.
 // ─────────────────────────────────────────────
 
-export const getSnitchDetail = createServerFn({ method: "GET" })
+export const getSnitchDetail = createServerFn({ method: "POST" })
 	.validator((data: { snitchId: string }) => data)
 	.handler(async ({ data }) => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		const viewerId = session?.user.id ?? null;
+
 		const [snitchRow] = await db
-			.select()
+			.select({
+				id: snitch.id,
+				studentName: snitch.studentName,
+				studentId: snitch.studentId,
+				university: snitch.university,
+				createdAt: snitch.createdAt,
+			})
 			.from(snitch)
 			.where(eq(snitch.id, data.snitchId))
 			.limit(1);
 
 		if (!snitchRow) return null;
 
-		const reviews = await db
+		const rows = await db
 			.select({
 				id: review.id,
 				authorId: review.authorId,
@@ -200,6 +287,7 @@ export const getSnitchDetail = createServerFn({ method: "GET" })
 				behaviour: review.behaviour,
 				description: review.description,
 				edited: review.edited,
+				anonymous: review.anonymous,
 				createdAt: review.createdAt,
 				updatedAt: review.updatedAt,
 				authorName: user.name,
@@ -208,6 +296,22 @@ export const getSnitchDetail = createServerFn({ method: "GET" })
 			.innerJoin(user, eq(review.authorId, user.id))
 			.where(eq(review.snitchId, data.snitchId))
 			.orderBy(sql`${review.createdAt} desc`);
+
+		// Build each review explicitly (no spreading) so authorId can't leak.
+		const reviews = rows.map((r) => ({
+			id: r.id,
+			teamwork: r.teamwork,
+			communication: r.communication,
+			reliability: r.reliability,
+			behaviour: r.behaviour,
+			description: r.description,
+			edited: r.edited,
+			anonymous: r.anonymous,
+			createdAt: r.createdAt,
+			updatedAt: r.updatedAt,
+			isMine: viewerId !== null && r.authorId === viewerId,
+			authorName: r.anonymous ? null : r.authorName,
+		}));
 
 		const count = reviews.length;
 		const sum = (key: keyof Ratings) =>
@@ -261,6 +365,10 @@ export const getUniversityCounts = createServerFn({ method: "GET" }).handler(
 // A snitch already exists — this adds one more experience to it.
 // Enforced: verified email, same university as the snitch, one
 // review per user per snitch (DB unique constraint catches this).
+//
+// Reviews added here are NEVER anonymous. The input type has no
+// `anonymous` field and the insert sets it to false explicitly, so a
+// tampered request can't smuggle one in.
 // ─────────────────────────────────────────────
 
 type AddReviewInput = Ratings & {
@@ -312,6 +420,7 @@ export const addReview = createServerFn({ method: "POST" })
 				reliability: data.reliability,
 				behaviour: data.behaviour,
 				description,
+				anonymous: false,
 			});
 		} catch (err) {
 			if (isUniqueViolation(err)) {
@@ -328,6 +437,8 @@ export const addReview = createServerFn({ method: "POST" })
 // Lets a user edit a review they already wrote — but only ONCE.
 // Only the original author can edit, and once `edited` is true no
 // further edits are accepted. Enforced server-side, not just in the UI.
+// The `anonymous` flag is never touched here: an edit can't reveal or
+// hide an author.
 // ─────────────────────────────────────────────
 
 type UpdateReviewInput = Ratings & {
@@ -394,13 +505,13 @@ export const updateReview = createServerFn({ method: "POST" })
 		return { ok: true as const };
 	});
 
-
-
-	// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
 // getReviewAuthorEmail
 // Returns the email of one review's author, on demand. Only logged-in,
 // verified users can call it, so emails are never in the public page
 // data. POST (not GET) so authenticated responses are never cached.
+//
+// Anonymous reviews are refused: their author's email is never revealed.
 // ─────────────────────────────────────────────
 
 export const getReviewAuthorEmail = createServerFn({ method: "POST" })
@@ -417,7 +528,7 @@ export const getReviewAuthorEmail = createServerFn({ method: "POST" })
 		}
 
 		const [row] = await db
-			.select({ email: user.email })
+			.select({ email: user.email, anonymous: review.anonymous })
 			.from(review)
 			.innerJoin(user, eq(review.authorId, user.id))
 			.where(eq(review.id, data.reviewId))
@@ -425,6 +536,9 @@ export const getReviewAuthorEmail = createServerFn({ method: "POST" })
 
 		if (!row) {
 			return { ok: false as const, reason: "not_found" as const };
+		}
+		if (row.anonymous) {
+			return { ok: false as const, reason: "anonymous" as const };
 		}
 
 		return { ok: true as const, email: row.email };

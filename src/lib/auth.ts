@@ -12,20 +12,18 @@ export const auth = betterAuth({
 
 	emailAndPassword: {
 		enabled: true,
-		// Users cannot sign in until their email is verified.
+
 		requireEmailVerification: true,
 	},
 
 	emailVerification: {
-		// Fire-and-forget (not awaited) — Better Auth recommends this to
-		// avoid timing attacks that could reveal whether an email exists.
+
 		sendVerificationEmail: async ({ user, url }) => {
 			void sendVerificationEmail(user.email, url);
 		},
-		// Send the verification email automatically right after signup.
+
 		sendOnSignUp: true,
-		// Once they click the link and verify, log them straight in —
-		// no separate login step needed.
+
 		autoSignInAfterVerification: true,
 		expiresIn: 3600, // 1 hour
 	},
@@ -44,12 +42,18 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				before: async (userData) => {
-					const domain = userData.email.split("@")[1];
+					const [localPart, domain] = userData.email.split("@");
 					const university = DOMAIN_UNIVERSITY_MAP[domain];
 
 					if (!university) {
 						throw new Error(
 							"Only university email addresses are allowed. Please use your official university email.",
+						);
+					}
+
+					if (localPart.includes("+")) {
+						throw new Error(
+							'Email addresses containing "+" are not allowed. Please use your plain university email.',
 						);
 					}
 
