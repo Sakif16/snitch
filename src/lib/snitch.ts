@@ -393,3 +393,39 @@ export const updateReview = createServerFn({ method: "POST" })
 
 		return { ok: true as const };
 	});
+
+
+
+	// ─────────────────────────────────────────────
+// getReviewAuthorEmail
+// Returns the email of one review's author, on demand. Only logged-in,
+// verified users can call it, so emails are never in the public page
+// data. POST (not GET) so authenticated responses are never cached.
+// ─────────────────────────────────────────────
+
+export const getReviewAuthorEmail = createServerFn({ method: "POST" })
+	.validator((data: { reviewId: string }) => data)
+	.handler(async ({ data }) => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+
+		if (!session) {
+			return { ok: false as const, reason: "unauthenticated" as const };
+		}
+		if (!session.user.emailVerified) {
+			return { ok: false as const, reason: "unverified" as const };
+		}
+
+		const [row] = await db
+			.select({ email: user.email })
+			.from(review)
+			.innerJoin(user, eq(review.authorId, user.id))
+			.where(eq(review.id, data.reviewId))
+			.limit(1);
+
+		if (!row) {
+			return { ok: false as const, reason: "not_found" as const };
+		}
+
+		return { ok: true as const, email: row.email };
+	});

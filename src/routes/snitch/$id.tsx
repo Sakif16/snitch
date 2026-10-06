@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { AddReviewModal } from "#/components/AddReviewModal";
 import { EditReviewModal } from "#/components/EditReviewModal";
+import { ReviewAuthorEmail } from "#/components/ReviewAuthorEmail";
 import {
 	Card,
 	CardContent,
@@ -110,10 +111,13 @@ function SnitchDetailPage() {
 						<Card key={r.id}>
 							<CardHeader className="flex flex-row items-start justify-between">
 								<div>
-									<CardTitle className="text-sm font-medium">
-										{r.authorName}
-									</CardTitle>
-									<CardDescription>
+									<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+										<CardTitle className="text-sm font-medium">
+											{r.authorName}
+										</CardTitle>
+										<ReviewAuthorEmail reviewId={r.id} />
+									</div>
+									<CardDescription className="mt-1">
 										{formatDateTime(r.createdAt)}
 										{r.edited && (
 											<span className="ml-1 italic">
