@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MailCheck } from "lucide-react";
 import { useState } from "react";
+import { PasswordInput } from "#/components/PasswordInput";
 import { TermsModal } from "#/components/TermsModal";
 import { authClient } from "#/lib/auth-client";
 import { DOMAIN_UNIVERSITY_MAP } from "#/lib/universities";
@@ -176,9 +177,8 @@ function SignupPage() {
 
 						<div className="space-y-2">
 							<Label htmlFor="password">Password</Label>
-							<Input
+							<PasswordInput
 								id="password"
-								type="password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								required
@@ -187,9 +187,8 @@ function SignupPage() {
 
 						<div className="space-y-2">
 							<Label htmlFor="confirmPassword">Confirm password</Label>
-							<Input
+							<PasswordInput
 								id="confirmPassword"
-								type="password"
 								value={confirmPassword}
 								onChange={(e) => setConfirmPassword(e.target.value)}
 								required
