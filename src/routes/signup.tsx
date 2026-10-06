@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { MailCheck } from "lucide-react";
 import { useState } from "react";
 import { TermsModal } from "#/components/TermsModal";
 import { authClient } from "#/lib/auth-client";
@@ -20,8 +21,6 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupPage() {
-	const navigate = useNavigate();
-
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -29,6 +28,8 @@ function SignupPage() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [termsOpen, setTermsOpen] = useState(false);
+	// true once the account is created and the verification email is on its way
+	const [signedUp, setSignedUp] = useState(false);
 
 	const domain = email.split("@")[1] ?? "";
 	const detectedUniversity = DOMAIN_UNIVERSITY_MAP[domain] ?? null;
@@ -73,7 +74,52 @@ function SignupPage() {
 			setError(authError.message ?? "Something went wrong. Please try again.");
 			return;
 		}
-		navigate({ to: "/" });
+
+		// Show the "check your email" panel instead of navigating away.
+		setSignedUp(true);
+	}
+
+	if (signedUp) {
+		return (
+			<div className="flex min-h-[calc(100vh-93px)] items-center justify-center bg-background px-4 py-6">
+				<Card className="w-full max-w-sm">
+					<CardHeader className="items-center space-y-3 text-center">
+						<div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600/10">
+							<MailCheck className="h-7 w-7 text-red-600" />
+						</div>
+						<CardTitle className="text-xl">Verification email sent</CardTitle>
+						<CardDescription className="text-sm">
+							We sent a verification link to
+						</CardDescription>
+						<p className="break-all font-mono text-sm font-medium text-foreground">
+							{email}
+						</p>
+					</CardHeader>
+
+					<CardContent className="space-y-4 text-center">
+						<div className="rounded-md border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+							Click the link in that email to activate your account. You can't
+							sign in until you verify.
+						</div>
+
+						<p className="text-xs text-muted-foreground">
+							Can't see it? It can take a minute, and it may land in your{" "}
+							<strong className="text-foreground">spam</strong> folder. The link
+							expires in 1 hour.
+						</p>
+
+						<div className="flex justify-center gap-2">
+							<Button variant="outline" asChild>
+								<Link to="/">Back home</Link>
+							</Button>
+							<Button variant="custom" asChild>
+								<Link to="/signin">Go to sign in</Link>
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		);
 	}
 
 	return (
