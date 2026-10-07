@@ -1,10 +1,10 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-
-import appCss from '../styles.css?url'
+import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { Analytics, GA_ID } from '#/components/Analytics'
 import { Footer } from '#/components/Footer'
 import { Navbar } from '#/components/navbar'
+import appCss from '../styles.css?url'
 
 // Runs in <head> before first paint so the correct theme class is on <html>
 // before anything is rendered. Same logic as ThemeToggle.
@@ -19,6 +19,26 @@ const themeScript = `
   } catch (e) {}
 })();
 `
+
+// Page views are sent manually by <Analytics /> on every route change,
+// so the automatic one is switched off to avoid double counting.
+const gaScripts = GA_ID
+  ? [
+      {
+        src: `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`,
+        async: true,
+      },
+      {
+        children: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.gtag = gtag;
+gtag('js', new Date());
+gtag('config', '${GA_ID}', { send_page_view: false });
+`,
+      },
+    ]
+  : []
 
 export const Route = createRootRoute({
   head: () => ({
@@ -40,6 +60,7 @@ export const Route = createRootRoute({
         href: appCss,
       },
     ],
+    scripts: gaScripts,
   }),
   shellComponent: RootDocument,
 })
@@ -57,6 +78,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* pb-9 = footer height (h-9), so content never hides behind it */}
         <main className="pb-9">{children}</main>
         <Footer />
+        <Analytics />
         <TanStackDevtools
           config={{
             position: 'bottom-right',
