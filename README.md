@@ -57,7 +57,7 @@ To add another university, update the `university` enum in `src/db/schema.ts`, g
 - **Anonymity applies to other users only.** The operator can link an anonymous post to its account and may disclose that where required by law or to investigate misuse.
 - **Plus-addressed emails** (`name+tag@domain`) are rejected at signup, so one mailbox can't be turned into many accounts.
 - **Password resets are locked down.** The reset page is unreachable without a valid token (checked on the server before anything renders), tokens are single-use and expire after 1 hour, all sessions are signed out after a reset, and the "forgot password" screen answers identically whether or not an account exists.
-- **Analytics** sends only page paths, never query strings, so reset tokens are never reported.
+- **Analytics** uses Cloudflare Web Analytics, which sets no cookies.
 
 ---
 
@@ -69,7 +69,7 @@ To add another university, update the `university` enum in `src/db/schema.ts`, g
 - **PostgreSQL** on **Neon** (serverless database)
 - **Drizzle ORM** and **drizzle-kit** (schema and migrations)
 - **Mailjet** (transactional email over its HTTP API: verification, password reset and support messages)
-- **Google Analytics 4** (page view tracking)
+- **Cloudflare Analytics** (web traffic)
 - **Vite**, **Nitro** (production server build)
 - **Biome** (linting and formatting)
 - **Vitest** (testing)
@@ -210,7 +210,6 @@ snitch. is an independent project and is not affiliated with any university. All
 - Report button on reviews, plus moderation tools
 - Debounced search, pagination and sorting or filtering of results
 - Storing which version of the Terms each user accepted, and a standalone Terms page
-- Privacy policy and cookie notice for analytics
 - Case-insensitive student ID matching
 - Account deletion and data export
 - A custom domain with authenticated email sending
