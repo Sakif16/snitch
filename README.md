@@ -26,14 +26,14 @@ Live at: https://snitch-w8az.onrender.com
 - Browse by university and search for students by name or student ID
 - Post a new snitch for a student at your own university
 - Rate a groupmate from 1 to 5 on teamwork, communication, reliability and behaviour, with a written description
-- Post one snitch anonymously, once, ever (toggle in the post modal)
+- Post one snitch anonymously, only once per user (toggle in the post modal)
 - Add your own experience to an existing snitch (one review per user per snitch, same university only)
 - Edit your review once, with a confirmation step before saving
 - See averaged ratings for each student across all reviews
 - Reveal a reviewer's email on demand with "show email" (logged-in, verified users only, never for anonymous reviews)
 - Contact support through a form that emails the team directly
-- Switch between light and dark mode, with no flash on page load
-- Enjoy subtle animations: cards rise into view and lift on hover, and buttons lift on hover (all disabled for visitors who prefer reduced motion)
+- Switch between light and dark mode
+- Enjoy subtle animations
 
 ### Supported universities
 
