@@ -80,7 +80,7 @@ function SnitchDetailPage() {
 				<CardContent>
 					<div className="grid grid-cols-4 divide-x divide-border rounded-md border border-border">
 						<RatingCell label="Teamwork" value={averages.teamwork} />
-						<RatingCell label="Comms" value={averages.communication} />
+						<RatingCell label="Communication" value={averages.communication} />
 						<RatingCell label="Reliability" value={averages.reliability} />
 						<RatingCell label="Behaviour" value={averages.behaviour} />
 					</div>
@@ -154,7 +154,7 @@ function SnitchDetailPage() {
 										<strong className="text-foreground">{r.teamwork}</strong>
 									</span>
 									<span>
-										Comms{" "}
+										Communication{" "}
 										<strong className="text-foreground">
 											{r.communication}
 										</strong>

@@ -292,9 +292,8 @@ button,
 .island-shell,
 a {
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease,
-    transform 180ms ease;
+    transform 180ms ease, translate 180ms ease, box-shadow 180ms ease;
 }
-
 .island-kicker {
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -359,5 +358,49 @@ a {
   body {
     background-color: var(--background);
     color: var(--foreground);
+  }
+}
+
+
+
+
+/* ───── Cards rise into view ───── */
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cards already on screen at load: staggered rise (--i is the card index).
+   "backwards" keeps them hidden during their delay without pinning the end
+   state, so the hover lift still works afterwards. */
+.card-rise {
+  animation: card-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* Cards that start below the fold wait invisibly until scrolled into view
+   (the class is added by the page's IntersectionObserver). */
+.card-rise.rise-wait:not(.is-in) {
+  animation: none;
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.card-rise.rise-wait.is-in {
+  animation-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-rise,
+  .card-rise.rise-wait:not(.is-in) {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
