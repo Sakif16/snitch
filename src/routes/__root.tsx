@@ -1,7 +1,6 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { Analytics, GA_ID } from '#/components/Analytics'
 import { Footer } from '#/components/Footer'
 import { Navbar } from '#/components/navbar'
 import appCss from '../styles.css?url'
@@ -20,21 +19,22 @@ const themeScript = `
 })();
 `
 
-// Page views are sent manually by <Analytics /> on every route change,
-// so the automatic one is switched off to avoid double counting.
-const gaScripts = GA_ID
+// Cloudflare Web Analytics. Cookie-less, and it tracks client-side route
+// changes by itself, so no manual page-view code is needed. Off if the
+// token isn't set.
+const CF_TOKEN = import.meta.env.VITE_CF_BEACON_TOKEN as string | undefined
+
+const analyticsScripts = CF_TOKEN
   ? [
       {
-        src: `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`,
-        async: true,
-      },
-      {
         children: `
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-window.gtag = gtag;
-gtag('js', new Date());
-gtag('config', '${GA_ID}', { send_page_view: false });
+(function () {
+  var s = document.createElement("script");
+  s.defer = true;
+  s.src = "https://static.cloudflareinsights.com/beacon.min.js";
+  s.setAttribute("data-cf-beacon", ${JSON.stringify(JSON.stringify({ token: CF_TOKEN }))});
+  document.head.appendChild(s);
+})();
 `,
       },
     ]
@@ -60,7 +60,7 @@ export const Route = createRootRoute({
         href: appCss,
       },
     ],
-    scripts: gaScripts,
+    scripts: analyticsScripts,
   }),
   shellComponent: RootDocument,
 })
@@ -78,7 +78,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* pb-9 = footer height (h-9), so content never hides behind it */}
         <main className="pb-9">{children}</main>
         <Footer />
-        <Analytics />
         <TanStackDevtools
           config={{
             position: 'bottom-right',
