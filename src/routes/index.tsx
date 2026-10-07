@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { getUniversityCounts } from "#/lib/snitch";
 
 export const Route = createFileRoute("/")({
@@ -17,6 +18,34 @@ const UNIVERSITY_NAMES: Record<string, string> = {
 
 function HomePage() {
 	const counts = Route.useLoaderData();
+
+	// Cards already visible at load get the CSS stagger animation. Cards below
+	// the fold (common on phones) are held back and animate when scrolled to.
+	useEffect(() => {
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+		const cards = document.querySelectorAll<HTMLElement>("[data-rise]");
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						entry.target.classList.add("is-in");
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{ threshold: 0.15 },
+		);
+
+		for (const card of cards) {
+			if (card.getBoundingClientRect().top > window.innerHeight) {
+				card.classList.add("rise-wait");
+				observer.observe(card);
+			}
+		}
+
+		return () => observer.disconnect();
+	}, []);
 
 	return (
 		<div className="mx-auto max-w-5xl px-5 py-12">
@@ -38,12 +67,14 @@ function HomePage() {
 				browse by university
 			</p>
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-				{counts.map((uni) => (
+				{counts.map((uni, i) => (
 					<Link
 						key={uni.tag}
 						to="/university/$tag"
 						params={{ tag: uni.tag }}
-						className="group relative overflow-hidden rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-red-500"
+						data-rise
+						style={{ "--i": i } as React.CSSProperties}
+						className="card-rise group relative overflow-hidden rounded-lg border border-border bg-card px-5 py-4 hover:-translate-y-1 hover:border-red-500 hover:shadow-xl hover:shadow-red-600/10 active:translate-y-0"
 					>
 						<span className="absolute right-0 top-0 h-full w-[3px] bg-red-600 opacity-0 transition-opacity group-hover:opacity-100" />
 
