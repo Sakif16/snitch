@@ -147,7 +147,7 @@ function SignupPage() {
 							/>
 							<p className="text-xs text-muted-foreground">
 								This name will be shown publicly alongside your email on
-								every snitch and review you post. So don't play smart.
+								every snitch and review you post. So maintain honesty.
 							</p>
 						</div>
 
